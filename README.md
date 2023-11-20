@@ -31,3 +31,9 @@ You can just concatenate them to a full archive:
 ```bash
 cat output.partial.tar output.remaining.tar > output.tar
 ```
+
+## Notes
+- For each `input.files` file, a metadata file will be created
+- This file is written to the current `tmp` directory
+- Its name is a `base64` hash of the names, sizes, and last modification date of the individual files, and ends with `.ziplive`
+- You can delete these `.ziplive` files (ideally when `ziplive` is not running), but that will remove the option of continuing a partial archive at an `--offset` without reading all files (the output will start at the correct `--offset`, it will just take longer to start)
