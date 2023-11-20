@@ -1,4 +1,4 @@
-# ZIPLIVE
+# TARLIVE
 
 ## The problem
 - You have a bunch of files
@@ -18,17 +18,17 @@ The result will be binary-identical to a single successful file transfer.
 ## Example
 With `input.files` being a file containing the list of files to transfer, you can create a complete `tar` archive with:
 ```bash
-ziplive --input input.files --tar output.tar
+tarlive --input input.files --tar output.tar
 ```
 or (using `STDIN`/`STDOUT`):
 ```bash
-cat input.files | ziplive > output.tar
+cat input.files | tarlive > output.tar
 ```
 
 
 You can "continue" a partial archive (eg `output.partial.tar`) of size 123456 bytes with
 ```bash
-ziplive --input input.files --tar output.remaining.tar --offset 123457
+tarlive --input input.files --tar output.remaining.tar --offset 123457
 ```
 (note that the offset is the partial file size plus one!)
 
@@ -40,6 +40,6 @@ cat output.partial.tar output.remaining.tar > output.tar
 ## Notes
 - For each `input.files` file, a metadata file will be created
 - This file is written to the current `tmp` directory
-- Its name is a `base64` hash of the names, sizes, and last modification date of the individual files, and ends with `.ziplive`
-- You can delete these `.ziplive` files (ideally when `ziplive` is not running), but that will remove the option of continuing a partial archive at an `--offset` without reading all files (the output will start at the correct `--offset`, it will just take longer to start)
+- Its name is a `base64` hash of the names, sizes, and last modification date of the individual files, and ends with `.tarlive`
+- You can delete these `.tarlive` files (ideally when `tarlive` is not running), but that will remove the option of continuing a partial archive at an `--offset` without reading all files (the output will start at the correct `--offset`, it will just take longer to start)
 - You can get more verbose output by prefixing the command with `RUST_LOG=info`

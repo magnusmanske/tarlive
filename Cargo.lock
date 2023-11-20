@@ -423,6 +423,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tarlive"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "clap",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tar",
+]
+
+[[package]]
 name = "termcolor"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -559,19 +574,4 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4686009f71ff3e5c4dbcf1a282d0a44db3f021ba69350cd42086b3e5f1c6985"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "ziplive"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "clap",
- "env_logger",
- "log",
- "serde",
- "serde_json",
- "sha2",
- "tar",
 ]
