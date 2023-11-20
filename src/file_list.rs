@@ -107,12 +107,8 @@ impl FileList {
     }
 
     fn tar_builder(&self) -> Result<Builder<TarOutput>> {
-        let output_file = match &self.output_file {
-            Some(of) => of,
-            None => return Err(anyhow!("No output file set")),
-        };
         let offset = self.offset.unwrap_or_default();
-        let tar_output = TarOutput::new(output_file,offset);
+        let tar_output = TarOutput::new(&self.output_file,offset);
         let tar_builder = Builder::new(tar_output);
         Ok(tar_builder)
     }

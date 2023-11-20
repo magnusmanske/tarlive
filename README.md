@@ -20,6 +20,11 @@ With `input.files` being a file containing the list of files to transfer, you ca
 ```bash
 ziplive --input input.files --tar output.tar
 ```
+or (using `STDIN`/`STDOUT`):
+```bash
+cat input.files | ziplive > output.tar
+```
+
 
 You can "continue" a partial archive (eg `output.partial.tar`) of size 123456 bytes with
 ```bash
@@ -37,3 +42,4 @@ cat output.partial.tar output.remaining.tar > output.tar
 - This file is written to the current `tmp` directory
 - Its name is a `base64` hash of the names, sizes, and last modification date of the individual files, and ends with `.ziplive`
 - You can delete these `.ziplive` files (ideally when `ziplive` is not running), but that will remove the option of continuing a partial archive at an `--offset` without reading all files (the output will start at the correct `--offset`, it will just take longer to start)
+- You can get more verbose output by prefixing the command with `RUST_LOG=info`

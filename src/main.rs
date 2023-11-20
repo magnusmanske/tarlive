@@ -1,6 +1,6 @@
 use clap::Parser;
 use file_list::FileList;
-use std::fs::{self};
+use std::{fs::{self}, io};
 
 pub mod file_entry;
 pub mod tar_output;
@@ -10,11 +10,11 @@ pub mod file_list;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Path of file with list of files to tar
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t=String::new())]
     input: String,
 
     /// Output tar file
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t=String::new())]
     tar: String,
 
     /// Offset
@@ -27,8 +27,8 @@ fn main() {
     let args = Args::parse();
     let mut fl = FileList::default();
     fl.set_output_file(&args.tar);
-    let files: Vec<String> = if args.input=="-" {
-        panic!("STDIN");
+    let files: Vec<String> = if args.input=="-" || args.input.is_empty() {
+        io::stdin().lines().filter_map(|l|l.ok()).collect()
     } else {
         fs::read_to_string(args.input)
             .expect("Problem reading input file")
