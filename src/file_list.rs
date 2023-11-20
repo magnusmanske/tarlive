@@ -84,7 +84,7 @@ impl FileList {
                 let key = entries.iter().map(|e| e.key()).collect::<Vec<String>>().join("\n");
                 let base_64 = self.get_sha256(&key).replace("=","").replace("/","").replace("+","").to_uppercase();
                 let tmp_dir = env::temp_dir();
-                let filename = format!("{}{base_64}.ziplive",tmp_dir.display());
+                let filename = format!("{}{base_64}.tarlive",tmp_dir.display());
                 info!("Using meta file {filename}");
                 self.meta_file = Some(filename.to_owned());
                 filename

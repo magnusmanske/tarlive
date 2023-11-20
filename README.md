@@ -10,9 +10,8 @@
 
 ## The solution
 If you use `tarlive`, you can do just that! `tarlive` creates a metadata file that logs where files end in the `tar` archive.
-If you call `tarlive` with `--offset NUMBER` (the size of the received part of the file, plus 1), it will skip all completely transferred files,
-and start generating the `tar` file from the first partially transferred file.
-The output can simply be appended to the partially transferred file.
+If you call `tarlive` with `--offset NUMBER` (the size of the received part of the file, plus 1), it will skip all completely transferred files (that is, not even read them), and start generating the `tar` file from the first new or partially transferred file.
+The output can simply be appended to the partially transferred archive.
 The result will be binary-identical to a single successful file transfer.
 
 ## Example

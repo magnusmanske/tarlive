@@ -37,5 +37,5 @@ fn main() {
     };
     fl.set_files(&files).unwrap();
     fl.set_offset(args.offset);
-    fl.output().unwrap();
+    let _ = fl.output();
 }
