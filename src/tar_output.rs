@@ -2,7 +2,6 @@ use std::{fs::File, io::{self, Write}};
 
 const OVERHEAD_ESTIMATE_BYTES_PER_FILE: usize = 1024;
 
-// #[derive(Debug)]
 pub struct TarOutput {
     output_file: Box<dyn Write>,
     offset: usize,
@@ -11,19 +10,11 @@ pub struct TarOutput {
 
 impl TarOutput {
     pub fn new(path: &Option<String>, offset: usize) -> Self {
-        let output_file: Box<dyn Write> = match path {
-            Some(path) => {
-                match path.as_str() {
-                    "" => Box::new(io::stdout()),
-                    "-" => Box::new(io::stdout()),
-                    path => Box::new(File::create(path).unwrap()),
-                }
-                    
-            }
-            None => Box::new(io::stdout()),
-        };
         Self {
-            output_file,
+            output_file :match path.to_owned().unwrap_or_default().as_str() {
+                ""|"-" => Box::new(io::stdout()),
+                path => Box::new(File::create(path).unwrap()),
+            },
             offset,
             position: 0,
         }
