@@ -6,7 +6,7 @@
 - You transfer the data but something terminates the transfer prematurely
 - You have the file size of the received tar file
 - You want to continue where you left off
-
+- Eg for webservers, see [range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests)
 
 ## The solution
 If you use `tarlive`, you can do just that! `tarlive` creates a metadata file that logs where files end in the `tar` archive.
