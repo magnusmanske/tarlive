@@ -45,7 +45,7 @@ fn main() {
     };
     match args.format.trim().to_lowercase().as_str() {
         ""|"tar" => fl.set_output_format(OutputFormat::Tar),
-        "zip" => fl.set_output_format(OutputFormat::Zip),
+        // "zip" => fl.set_output_format(OutputFormat::Zip),
         _ => panic!("Unsupported output format \"{}\"",args.format),
     }
     fl.set_files(&files).unwrap();

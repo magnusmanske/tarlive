@@ -100,10 +100,8 @@ impl FileList {
         Ok(())
     }
 
+    // THIS DOES NOT WORK RIGHT NOW
     pub fn output_zip(&mut self) -> Result<()>{
-        if true {
-            panic!("ZIP does not currently work");
-        }
         // Create ZIP writer
         let offset = self.offset.unwrap_or_default();
         let output_writer = OutputWriter::new(&self.output_file,offset,self.end.to_owned())?;
