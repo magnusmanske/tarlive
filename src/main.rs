@@ -5,7 +5,6 @@ use std::{fs::{self}, io};
 pub mod file_entry;
 pub mod output_writer;
 pub mod file_list;
-pub mod deterministic_zip;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
