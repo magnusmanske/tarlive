@@ -37,7 +37,7 @@ cat output.partial.tar output.remaining.tar > output.tar
 
 To generate a "slice" of the tar file, you can use `--end`:
 ```bash
-tarlive --input input.files --tar output.remaining.tar --offset 123 --end 456
+tarlive --input input.files --tar output.bytes-123-456.tar --offset 123 --end 456
 ```
 
 ## Notes
