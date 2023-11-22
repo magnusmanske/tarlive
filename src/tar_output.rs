@@ -42,8 +42,9 @@ impl TarOutput {
                 return Err(err);
             }
         }
-        self.position += buf.len();
-        self.output_file.write(buf)
+        let bytes_written = self.output_file.write(buf)?;
+        self.position += bytes_written;
+        Ok(bytes_written)
     }
 }
 
@@ -56,10 +57,11 @@ impl Write for TarOutput {
         }
         if self.position < self.offset {
             let buf_start = self.offset - self.position - 1;
+            self.position += buf_start; // Pretend we wrote this too
             // info!("Starting partial from {} with buf_start {buf_start} len {len} offset {}",self.position,self.offset);
-            self.actual_write(&buf[buf_start..])?;
-            self.position += buf_start;
-            return Ok(len);
+            let bytes_written = self.actual_write(&buf[buf_start..len])?;
+            // info!("{buf_start}+{bytes_written}={len}? {}",len-buf_start-bytes_written);
+            return Ok(buf_start+bytes_written);
         }
         self.actual_write(buf)
     }
