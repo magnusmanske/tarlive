@@ -24,7 +24,6 @@ or (using `STDIN`/`STDOUT`):
 cat input.files | tarlive > output.tar
 ```
 
-
 You can "continue" a partial archive (eg `output.partial.tar`) of size 123456 bytes with
 ```bash
 tarlive --input input.files --tar output.remaining.tar --offset 123457
@@ -34,6 +33,11 @@ tarlive --input input.files --tar output.remaining.tar --offset 123457
 You can just concatenate them to a full archive:
 ```bash
 cat output.partial.tar output.remaining.tar > output.tar
+```
+
+To generate a "slice" of the tar file, you can use `--end`:
+```bash
+tarlive --input input.files --tar output.remaining.tar --offset 123 --end 456
 ```
 
 ## Notes
