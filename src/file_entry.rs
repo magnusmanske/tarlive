@@ -5,7 +5,7 @@ use anyhow::{anyhow, Result};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FileEntry {
     pub path: String,
-    pub len: u64,
+    pub len: usize,
     pub modified: SystemTime,
     pub tar_position_after: Option<usize>,
 }
@@ -39,7 +39,7 @@ impl FileEntry {
         let ret = Self {
             path: path.to_string(),
             modified: metadata.modified().map_err(|e|anyhow!(e))?,
-            len: metadata.len(),
+            len: metadata.len() as usize,
             tar_position_after: None,
         };
         Ok(ret)

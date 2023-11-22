@@ -15,6 +15,7 @@ pub struct FileList {
     meta_file: Option<String>,
     entries: Vec<FileEntry>,
     offset: Option<usize>,
+    end: Option<usize>,
 }
 
 impl FileList {
@@ -23,7 +24,17 @@ impl FileList {
     }
 
     pub fn set_offset(&mut self, offset: usize) {
-        self.offset = Some(offset);
+        self.offset = match offset {
+            0 => None,
+            other => Some(other),
+        };
+    }
+
+    pub fn set_end(&mut self, end: usize) {
+        self.end = match end {
+            0 => None,
+            other => Some(other),
+        };
     }
 
     pub fn set_files(&mut self, files: &Vec<String>) -> Result<()> {
@@ -45,11 +56,12 @@ impl FileList {
 
     pub fn output(&mut self) -> Result<()>{
         let mut tar_builder = self.tar_builder()?;
+        tar_builder.mode(tar::HeaderMode::Deterministic);
         for entry_id in 0..self.entries.len() {
             let entry = self.entries[entry_id].to_owned();
             let position_after = entry.tar_position_after;
-            if tar_builder.get_ref().is_earlier_than(entry.len as usize) && position_after.is_some() {
-                info!("Skipping {}",entry.path);
+            if tar_builder.get_ref().is_earlier_than(entry.len) && position_after.is_some() {
+                // Don't output anything, just advance byte counter
                 tar_builder.get_mut().position = position_after.unwrap(); // Safe
             } else {
                 // Output file
@@ -58,6 +70,7 @@ impl FileList {
                 self.write_meta_file()?;
             }
         }
+        let _dummy = tar_builder.into_inner()?;
         Ok(())
     }
 
@@ -108,7 +121,7 @@ impl FileList {
 
     fn tar_builder(&self) -> Result<Builder<TarOutput>> {
         let offset = self.offset.unwrap_or_default();
-        let tar_output = TarOutput::new(&self.output_file,offset);
+        let tar_output = TarOutput::new(&self.output_file,offset,self.end.to_owned())?;
         let tar_builder = Builder::new(tar_output);
         Ok(tar_builder)
     }

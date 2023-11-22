@@ -20,6 +20,10 @@ struct Args {
     /// Offset
     #[arg(short, long, default_value_t = 0)]
     offset: usize,
+
+    /// End
+    #[arg(short, long, default_value_t = 0)]
+    end: usize,
 }
 
 fn main() {
@@ -37,5 +41,9 @@ fn main() {
     };
     fl.set_files(&files).unwrap();
     fl.set_offset(args.offset);
-    let _ = fl.output();
+    fl.set_end(args.end);
+    match fl.output() {
+        Ok(_) => {},
+        Err(e) => log::info!("{e}"),
+    }
 }
