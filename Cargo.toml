@@ -15,3 +15,4 @@ serde = { version = "1", features = ["derive"] }
 log = "0.4"
 env_logger = "*"
 clap = { version = "4", features = ["derive"] }
+zip = { version = "0.6", features = [ "deflate", "bzip2" ] }

@@ -1,13 +1,23 @@
 use log::info;
 use serde::{Serialize, Deserialize};
-use std::{fs::{self, File}, io::Write, env};
+use zip::{ZipWriter, write::FileOptions, DateTime};
+use std::{fs::{self, File}, io::{Write, Read}, env, sync::{Arc, Mutex}};
 use anyhow::{anyhow, Result};
 use serde_json::json;
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose};
 use tar::Builder;
 
-use crate::{file_entry::FileEntry, tar_output::TarOutput};
+use crate::{file_entry::FileEntry, output_writer::OutputWriter};
+
+const OVERHEAD_ESTIMATE_BYTES_PER_FILE: usize = 1024;
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub enum OutputFormat {
+    #[default]
+    Tar,
+    Zip,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct FileList {
@@ -16,11 +26,16 @@ pub struct FileList {
     entries: Vec<FileEntry>,
     offset: Option<usize>,
     end: Option<usize>,
+    output_format: OutputFormat,
 }
 
 impl FileList {
     pub fn set_output_file(&mut self, filename: &str) {
         self.output_file = Some(filename.to_string());
+    }
+
+    pub fn set_output_format(&mut self, format: OutputFormat) {
+        self.output_format = format;
     }
 
     pub fn set_offset(&mut self, offset: usize) {
@@ -55,24 +70,88 @@ impl FileList {
     }
 
     pub fn output(&mut self) -> Result<()>{
-        let mut tar_builder = self.tar_builder()?;
-        tar_builder.mode(tar::HeaderMode::Deterministic);
+        match self.output_format {
+            OutputFormat::Tar => self.output_tar(),
+            OutputFormat::Zip => self.output_zip(),
+        }
+    }
+
+    pub fn output_tar(&mut self) -> Result<()>{
+        let offset = self.offset.unwrap_or_default();
+        let output_writer = OutputWriter::new(&self.output_file,offset,self.end.to_owned())?;
+        let position = output_writer.position.clone();
+        let mut output_writer = Builder::new(output_writer);
+
+        output_writer.mode(tar::HeaderMode::Deterministic);
         for entry_id in 0..self.entries.len() {
             let entry = self.entries[entry_id].to_owned();
             let position_after = entry.tar_position_after;
-            if tar_builder.get_ref().is_earlier_than(entry.len) && position_after.is_some() {
+            if self.is_earlier_than(&position, entry.len, offset) && position_after.is_some() {
                 // Don't output anything, just advance byte counter
-                tar_builder.get_mut().position = position_after.unwrap(); // Safe
+                *position.lock().unwrap() = position_after.unwrap(); // Safe
             } else {
                 // Output file
-                tar_builder.append_path(&entry.path)?;
-                self.entries[entry_id].tar_position_after = Some(tar_builder.get_ref().position);
+                output_writer.append_path(&entry.path)?;
+                self.entries[entry_id].tar_position_after = Some(*position.lock().unwrap());
                 self.write_meta_file()?;
             }
         }
-        let _dummy = tar_builder.into_inner()?;
+        let _dummy = output_writer.into_inner()?;
         Ok(())
     }
+
+    pub fn output_zip(&mut self) -> Result<()>{
+        if true {
+            panic!("ZIP does not currently work");
+        }
+        // Create ZIP writer
+        let offset = self.offset.unwrap_or_default();
+        let output_writer = OutputWriter::new(&self.output_file,offset,self.end.to_owned())?;
+        let position = output_writer.position.clone();
+        let mut zip_writer = ZipWriter::new(output_writer);
+
+        // ZIP options to make it deterministic
+        let options = FileOptions::default()
+            .last_modified_time(DateTime::default())
+            .compression_method(zip::CompressionMethod::Stored);
+
+        // Iterate over files
+        for entry_id in 0..self.entries.len() {
+            let entry = self.entries[entry_id].to_owned();
+            let position_after = entry.tar_position_after;
+            if self.is_earlier_than(&position, entry.len, offset) && position_after.is_some() {
+                info!("Skipping {}", &entry.path);
+                // Don't output anything, just advance byte counter
+                *position.lock().unwrap() = position_after.unwrap(); // Safe
+            } else {
+                // Output file
+                info!("Starting {}", &entry.path);
+                zip_writer.start_file(&entry.path, options)?;
+
+                let mut buffer = Vec::new();
+                if true {
+                    info!("Reading {}", &entry.path);
+                    let mut f = File::open(&entry.path)?;
+                    f.read_to_end(&mut buffer)?;
+                    info!("Closing {}", &entry.path);
+                }
+                zip_writer.write_all(&*buffer)?;
+                info!("ZIPped {}", &entry.path);
+
+                self.entries[entry_id].tar_position_after = Some(*position.lock().unwrap());
+                self.write_meta_file()?;
+            }
+        }
+
+        // Finish ZIP file
+        zip_writer.finish()?;
+        Ok(())
+    }
+
+    pub fn is_earlier_than(&self, position: &Arc<Mutex<usize>>, file_size: usize, offset: usize) -> bool {
+        *position.lock().unwrap() + OVERHEAD_ESTIMATE_BYTES_PER_FILE+file_size < offset
+    }
+
 
     fn get_current_entries(&self, files: &Vec<String>) -> Result<Vec<FileEntry>> {
         let mut ret: Vec<FileEntry> = files.iter()
@@ -117,13 +196,6 @@ impl FileList {
             return Err(anyhow!("Files have changed since metadata generation; suggest to delete {meta_file} to be recomputed"));
         }
         Ok(())
-    }
-
-    fn tar_builder(&self) -> Result<Builder<TarOutput>> {
-        let offset = self.offset.unwrap_or_default();
-        let tar_output = TarOutput::new(&self.output_file,offset,self.end.to_owned())?;
-        let tar_builder = Builder::new(tar_output);
-        Ok(tar_builder)
     }
 
     fn write_meta_file(&self) -> Result<()> {

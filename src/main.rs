@@ -1,10 +1,11 @@
 use clap::Parser;
-use file_list::FileList;
+use file_list::{FileList, OutputFormat};
 use std::{fs::{self}, io};
 
 pub mod file_entry;
-pub mod tar_output;
+pub mod output_writer;
 pub mod file_list;
+pub mod deterministic_zip;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,6 +25,10 @@ struct Args {
     /// End
     #[arg(short, long, default_value_t = 0)]
     end: usize,
+
+    /// Format
+    #[arg(short, long, default_value_t = format!("tar"))]
+    format: String,
 }
 
 fn main() {
@@ -39,6 +44,11 @@ fn main() {
             .split("\n").map(|s|s.to_string())
             .collect()
     };
+    match args.format.trim().to_lowercase().as_str() {
+        ""|"tar" => fl.set_output_format(OutputFormat::Tar),
+        "zip" => fl.set_output_format(OutputFormat::Zip),
+        _ => panic!("Unsupported output format \"{}\"",args.format),
+    }
     fl.set_files(&files).unwrap();
     fl.set_offset(args.offset);
     fl.set_end(args.end);
